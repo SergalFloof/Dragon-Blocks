@@ -1,0 +1,416 @@
+package com.dragonblocks.util.handler;
+
+import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.PositionedSoundRecord;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
+import net.minecraftforge.client.event.GuiOpenEvent;
+import net.minecraftforge.client.event.MouseEvent;
+import net.minecraftforge.client.event.sound.PlaySoundEvent17;
+import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.fml.client.FMLClientHandler;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+
+import com.dragonblocks.api.IChisel;
+import com.dragonblocks.api.IHammer;
+import com.dragonblocks.network.PacketActivateBlock;
+import com.dragonblocks.network.PacketSlopeSelect;
+import com.dragonblocks.objects.blocks.BlockCoverable;
+import com.dragonblocks.renderer.helper.ParticleHelper;
+import com.dragonblocks.tileentity.TEBase;
+import com.dragonblocks.util.BlockProperties;
+import com.dragonblocks.util.Reference;
+import com.dragonblocks.util.registry.BlockInit;
+import com.dragonblocks.util.registry.BlockRegistry;
+
+
+public class EventHandler {
+
+    public static float hitX;
+    public static float hitY;
+    public static float hitZ;
+
+    /** Stores face for onBlockClicked(). */
+    public static int eventFace;
+
+    /** Stores entity that hit block. */
+    public static EntityPlayer eventEntityPlayer;
+
+    @SubscribeEvent
+    @SideOnly(Side.CLIENT)
+    /**
+     * Check render settings on GUI open/close event.
+     */
+    public void onGuiOpenEvent(GuiOpenEvent event)
+    {
+        if (event.gui == null) {
+            if (ShadersHandler.enableShadersModCoreIntegration) {
+                ShadersHandler.update();
+            }
+        }
+    }
+
+    @SubscribeEvent
+    /**
+     * Used to prevent block destruction if block is a Carpenter's Block
+     * and player is holding a Carpenter's tool.
+     */
+    public void onBlockBreakEvent(BlockEvent.BreakEvent event)
+    {
+        EntityPlayer entityPlayer = event.getPlayer();
+        ItemStack itemStack = entityPlayer.getHeldItem(EnumHand.MAIN_HAND);
+
+        if (entityPlayer == null || itemStack == null) {
+            return;
+        }
+
+        Item item = itemStack.getItem();
+        if (item == null) {
+            return;
+        }
+
+        if (event.block instanceof BlockCoverable) {
+            if (entityPlayer.capabilities.isCreativeMode && (item instanceof IHammer || item instanceof IChisel)) {
+                event.setCanceled(true);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    /**
+     * Used to store side clicked and also forces onBlockActivated
+     * event when entityPlayer is sneaking and activates block with the
+     * Carpenter's Hammer.
+     */
+    public void onPlayerInteractEvent(PlayerInteractEvent event)
+    {
+        if (event.isCanceled()) {
+            return;
+        }
+
+        Block block = event.entity.world.getBlock(event.x, event.y, event.z);
+
+        if (block instanceof BlockCoverable) {
+
+            eventFace = event.face;
+            eventEntityPlayer = event.entityPlayer;
+
+            ItemStack itemStack = eventEntityPlayer.getHeldItemMainhand();
+
+            RayTraceResult object = getMovingObjectPositionFromPlayer(eventEntityPlayer.world, eventEntityPlayer);
+
+            if (object != null) {
+                hitX = (float)object.hitVec.xCoord - event.x;
+                hitY = (float)object.hitVec.yCoord - event.y;
+                hitZ = (float)object.hitVec.zCoord - event.z;
+            } else {
+                hitX = hitY = hitZ = 1.0F;
+            }
+
+            switch (event.action) {
+                case LEFT_CLICK_BLOCK:
+                    boolean toolEquipped = itemStack != null && (itemStack.getItem() instanceof IHammer || itemStack.getItem() instanceof IChisel);
+
+                    /*
+                     * Creative mode doesn't normally invoke onBlockClicked(), but rather it tries
+                     * to destroy the block.
+                     *
+                     * We'll invoke it here when a Carpenter's tool is being held.
+                     */
+
+                    if (!event.getEntity().world.isRemote) {
+                        if (toolEquipped && eventEntityPlayer.capabilities.isCreativeMode) {
+                            block.onBlockClicked(eventEntityPlayer.world, event.x, event.y, event.z, eventEntityPlayer);
+                        }
+                    }
+
+                    break;
+                case RIGHT_CLICK_BLOCK:
+
+                    /*
+                     * To enable full functionality with the hammer, we need to override pretty
+                     * much everything that happens on sneak right-click.
+                     *
+                     * In order to invoke onBlockActivated() server-side, we must send a packet
+                     * from the client.
+                     * 
+                     * The server will receive the packet and attempt to alter the Carpenter's
+                     * block.  If nothing changes, vanilla behavior will resume - the Item(Block)
+                     * in the ItemStack (if applicable) will be created adjacent to block.
+                     */
+
+                    if (eventEntityPlayer.isSneaking()) {
+                        if (!(itemStack != null && itemStack.getItem() instanceof ItemBlock && !BlockProperties.isOverlay(itemStack))) {
+                            event.setCanceled(true); // Normally prevents server event, but sometimes it doesn't, so check below
+                            if (event.getEntity().world.isRemote) {
+                                PacketHandler.sendPacketToServer(new PacketActivateBlock(event.x, event.y, event.z, event.face));
+                            }
+                        }
+                    }
+
+                    break;
+                default: {}
+            }
+
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    @SubscribeEvent
+    /**
+     * Grabs mouse scroll events for slope selection.
+     */
+    public void onMouseEvent(MouseEvent event)
+    {
+        // We only want to process wheel events
+        if (event.button < 0)
+        {
+            EntityPlayer entityPlayer = Minecraft.getMinecraft().player;
+
+            if (entityPlayer != null && entityPlayer.isSneaking()) {
+                ItemStack itemStack = entityPlayer.getHeldItemMainhand();
+                if (itemStack != null && itemStack.getItem() instanceof ItemBlock && BlockProperties.toBlock(itemStack).equals(BlockInit.blockSlope)) {
+                    if (event.dwheel != 0) {
+                        PacketHandler.sendPacketToServer(new PacketSlopeSelect(entityPlayer.inventory.currentItem, event.dwheel > 0));
+                    }
+                    event.setCanceled(true);
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns the MovingObjectPosition of block hit by player.
+     * Adapted from protected method of same name in Item.class.
+     */
+    private RayTraceResult getMovingObjectPositionFromPlayer(World world, EntityPlayer entityPlayer)
+    {
+        double xPos = entityPlayer.prevPosX + (entityPlayer.posX - entityPlayer.prevPosX);
+        double yPos = entityPlayer.prevPosY + (entityPlayer.posY - entityPlayer.prevPosY) + (world.isRemote ? entityPlayer.getEyeHeight() - entityPlayer.getDefaultEyeHeight() : entityPlayer.getEyeHeight());
+        double zPos = entityPlayer.prevPosZ + (entityPlayer.posZ - entityPlayer.prevPosZ);
+
+        float pitch = entityPlayer.prevRotationPitch + (entityPlayer.rotationPitch - entityPlayer.prevRotationPitch);
+        float yaw = entityPlayer.prevRotationYaw + (entityPlayer.rotationYaw - entityPlayer.prevRotationYaw);
+
+        float commonComp = -MathHelper.cos(-pitch * 0.017453292F);
+
+        float xComp = MathHelper.sin(-yaw * 0.017453292F - (float)Math.PI) * commonComp;
+        float yComp = MathHelper.sin(-pitch * 0.017453292F);
+        float zComp = MathHelper.cos(-yaw * 0.017453292F - (float)Math.PI) * commonComp;
+        double reachDist = 5.0D;
+
+        if (entityPlayer instanceof EntityPlayerMP) {
+            reachDist = ((EntityPlayerMP)entityPlayer).theItemInWorldManager.getBlockReachDistance();
+        }
+
+        Vec3d vec1 = Vec3d.createVectorHelper(xPos, yPos, zPos);
+        Vec3d vec2 = vec1.addVector(xComp * reachDist, yComp * reachDist, zComp * reachDist);
+
+        return world.rayTraceBlocks(vec1, vec2);
+    }
+
+    @SubscribeEvent
+    public void onLivingUpdateEvent(LivingUpdateEvent event)
+    {
+        Entity entity = event.getEntityLiving();
+        World world = entity.world;
+
+        /*
+         * The purpose of the function is to manifest sprint particles
+         * and adjust slipperiness when entity is moving on block, so check
+         * that the conditions are met first.
+         */
+        if (!isMovingOnGround(entity))
+        {
+            return;
+        }
+
+        TEBase TE = getTileEntityAtFeet(entity);
+        if (TE != null) {
+
+            ItemStack itemStack = BlockProperties.getFeatureSensitiveSideItemStack(TE, EnumFacing.UP);
+
+            /* Spawn sprint particles client-side. */
+
+            if (world.isRemote && entity.isSprinting() && !entity.isInWater()) {
+                ParticleHelper.spawnTileParticleAt(entity, itemStack);
+            }
+
+            /* Adjust block slipperiness according to cover. */
+
+            Block block = BlockProperties.toBlock(itemStack);
+            if (block instanceof BlockCoverable) {
+                TE.getBlockType().slipperiness = Blocks.DIRT.slipperiness;
+            } else {
+                TE.getBlockType().slipperiness = block.slipperiness;
+            }
+
+        }
+    }
+
+    /**
+     * {@link onPlaySoundEvent} is used differently for singleplayer
+     * and multiplayer sound events. This will try to locate the {@link TEBase}
+     * that best represents the origin of the sound.
+     * <p>
+     * In singleplayer, this is normally the origin since it's used mainly
+     * for placement and destruction sounds.
+     * <p>
+     * In multiplayer, foreign players produce this event for step sounds,
+     * requiring a y offset of -1 to approximate the origin.
+     *
+     * @param  world the {@link World}
+     * @param  x the x coordinate
+     * @param  y the y coordinate
+     * @param  z the z coordinate
+     * @return an approximate {@link TEBase} used for producing a sound
+     */
+    private TEBase getApproximateSoundOrigin(World world, int x, int y, int z)
+    {
+        // Try origin first
+        TileEntity TE = world.getTileEntity(x, y, z);
+        if (TE != null && TE instanceof TEBase)
+        {
+            return (TEBase) TE;
+        }
+        else
+        {
+            // Try y-offset -1
+            TileEntity TE_YN = world.getTileEntity(x, y - 1, z);
+            if (TE_YN != null && TE_YN instanceof TEBase)
+            {
+                return (TEBase) TE_YN;
+            }
+        }
+
+        return null;
+    }
+
+    @SideOnly(Side.CLIENT)
+    @SubscribeEvent
+    public void onPlaySoundEvent(PlaySoundEvent17 event)
+    {
+        if (event != null && event.name != null && event.name.contains(Reference.MODID))
+        {
+            if (FMLCommonHandler.instance().getSide() == Side.CLIENT)
+            {
+                World world = FMLClientHandler.instance().getClient().world;
+                int x = MathHelper.floor_double(event.sound.getXPosF());
+                int y = MathHelper.floor_double(event.sound.getYPosF());
+                int z = MathHelper.floor_double(event.sound.getZPosF());
+
+                // We'll set a default block type to be safe
+                Block block = Blocks.PLANKS;
+
+                // Grab approximate origin, and gather accurate block type
+                TEBase TE = getApproximateSoundOrigin(world, x, y, z);
+                if (TE != null && TE.hasAttribute(TE.ATTR_COVER[6])) {
+                    block = BlockProperties.toBlock(BlockProperties.getCoverSafe(TE, 6));
+                }
+
+                if (event.name.startsWith("step.")) {
+                    event.result = new PositionedSoundRecord(new ResourceLocation(block.stepSound.getStepResourcePath()), block.stepSound.getVolume() * 0.15F, block.stepSound.getPitch(), x + 0.5F, y + 0.5F, z + 0.5F);
+                } else { // "dig." usually
+                    event.result = new PositionedSoundRecord(new ResourceLocation(block.stepSound.getBreakSound()), (block.stepSound.getVolume() + 1.0F) / 2.0F, block.stepSound.getPitch() * 0.8F, x + 0.5F, y + 0.5F, z + 0.5F);
+                }
+            }
+        }
+    }
+
+    /**
+     * Override sounds when walking on block.
+     *
+     * @param event
+     */
+    @SideOnly(Side.CLIENT)
+    @SubscribeEvent
+    public void onPlaySoundAtEntityEvent(PlaySoundAtEntityEvent event)
+    {
+        if (event != null && event.name != null && event.name.contains(Reference.MODID))
+        {
+            Entity entity = event.getEntity();
+
+            /*
+             * The function to my knowledge is only used for playing walking sounds
+             * at entity, so we'll check for the conditions first.
+             */
+            if (!isMovingOnGround(entity))
+            {
+                return;
+            }
+
+            TEBase TE = getTileEntityAtFeet(entity);
+            if (TE != null) {
+
+                // Give SoundType a valid resource by default
+                event.name = Blocks.PLANKS.stepSound.getStepResourcePath();
+
+                // Gather accurate SoundType based on block properties
+                Block block = BlockProperties.toBlock(BlockProperties.getFeatureSensitiveSideItemStack(TE, ForgeDirection.UP));
+                if (!(block instanceof BlockCoverable))
+                {
+                    event.name = block.stepSound.getStepResourcePath();
+                }
+
+            }
+        }
+    }
+
+    /**
+     * Gets the {@link TEBase} object at player's feet, if one exists.
+     * <p>
+     * It is safer to gather the tile entity reference than a block reference.
+     *
+     * @param entity
+     * @return
+     */
+    private TEBase getTileEntityAtFeet(Entity entity)
+    {
+        int x = MathHelper.floor(entity.posX);
+        int y = MathHelper.floor(entity.posY - 0.20000000298023224D - entity.getYOffset());
+        int z = MathHelper.floor(entity.posZ);
+
+        TileEntity tileEntity = entity.world.getTileEntity(x, y, z);
+        if (tileEntity != null && tileEntity instanceof TEBase)
+        {
+            return (TEBase) tileEntity;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    /**
+     * Determines if the player is moving in the x, z directions on
+     * solid ground.
+     *
+     * @param entity
+     * @return
+     */
+    private boolean isMovingOnGround(Entity entity)
+    {
+        return entity.onGround && (entity.motionX != 0 || entity.motionZ != 0);
+    }
+
+}
