@@ -6,6 +6,7 @@ import com.dragonblocks.util.registry.BlockInit;
 import com.dragonblocks.util.registry.BlockRegistry;
 
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class Bed {
@@ -62,24 +63,25 @@ public class Bed {
      * Returns TE for opposite piece.
      * Will return null if opposite piece doesn't exist (when creating or destroying block, for instance).
      */
-    public static TEBase getOppositeTE(TEBase TE)
+    public static TEBase getOppositeTE(TEBase TE, BlockPos pos)
     {
     	EnumFacing dir = getDirection(TE);
-        int x = TE.xCoord;
-        int z = TE.zCoord;
+        int x = TE.getPos().getX();
+        int z = TE.getPos().getZ();
 
         if (isHeadOfBed(TE)) {
-            x = TE.xCoord + dir.offsetX;
-            z = TE.zCoord + dir.offsetZ;
+            x = TE.getPos().getX() + dir.getFrontOffsetX();
+            z = TE.getPos().getZ() + dir.getFrontOffsetZ();
         } else {
-            x = TE.xCoord - dir.offsetX;
-            z = TE.zCoord - dir.offsetZ;
+            x = TE.getPos().getX() - dir.getFrontOffsetX();
+            z = TE.getPos().getZ() - dir.getFrontOffsetZ();
         }
 
         World world = TE.getWorld();
+        
 
-        if (world.getBlock(x, TE.yCoord, z).equals(BlockInit.enableBed)) {
-            return (TEBase) world.getTileEntity(x, TE.yCoord, z);
+        if (world.getBlock(new BlockPos(x, TE.getPos().getY(), z)).equals(BlockInit.enableBed)) {
+            return (TEBase) world.getTileEntity(pos);
         } else {
             return null;
         }

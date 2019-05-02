@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import com.dragonblocks.tileentity.TEBase;
 
+import net.minecraft.client.renderer.EnumFaceDirection;
 import net.minecraft.util.EnumFacing;
 
 public class Slab implements ISided {
@@ -20,9 +21,8 @@ public class Slab implements ISided {
     private static final Integer[] DIR_MAP = { 4, 5, 0, 1, 2, 3 };
 
     @Override
-    public boolean setDirection(TEBase TE, EnumFacing dir)
-    {
-        int data = TE.getData();
+	public boolean setDirection(TEBase TE, EnumFaceDirection dir) {
+		int data = TE.getData();
         int newData = Arrays.asList(DIR_MAP).indexOf(dir.ordinal()) + 1;
         if (data != newData) {
             TE.setData(newData);
@@ -30,7 +30,7 @@ public class Slab implements ISided {
         }
 
         return false;
-    }
+	}
 
     public boolean setFullCube(TEBase TE)
     {
@@ -38,19 +38,22 @@ public class Slab implements ISided {
     }
 
     @Override
-    public EnumFacing getDirection(TEBase TE)
-    {
-        if (isFullCube(TE)) {
-            return EnumFacing.null;
+	public EnumFacing getDirection(TEBase TE) {
+		if (isFullCube(TE)) {
+            return null;
         }
 
         int data = TE.getData();
-        return EnumFacing.getOrientation(DIR_MAP[data - 1]);
-    }
+        return EnumFacing.getFront(DIR_MAP[data - 1]);
+	}
 
     public boolean isFullCube(TEBase TE)
     {
         return TE.getData() == 0;
     }
+
+	
+
+	
 
 }

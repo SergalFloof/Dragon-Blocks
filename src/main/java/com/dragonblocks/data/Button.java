@@ -1,9 +1,11 @@
 package com.dragonblocks.data;
 
 import com.dragonblocks.tileentity.TEBase;
+import com.dragonblocks.util.BlockProperties;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.EnumFaceDirection;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
 
 public class Button implements ISided {
@@ -25,10 +27,9 @@ public class Button implements ISided {
      * Returns direction.
      */
     @Override
-    public EnumFaceDirection getDirection(TEBase TE)
-    {
-        return EnumFaceDirection.getFacing(TE.getData() & 0x7);
-    }
+   	public EnumFacing getDirection(TEBase TE) {
+   		return EnumFacing.getFront(TE.getData() & 0x7);
+   	}
 
     /**
      * Sets direction.
@@ -57,7 +58,7 @@ public class Button implements ISided {
         World world = TE.getWorld();
 
         if (!world.isRemote && BlockProperties.toBlock(BlockProperties.getCover(TE, 6)).getMaterial() != Material.CLOTH && playSound && getState(TE) != state) {
-            world.playSoundEffect(TE.xCoord + 0.5D, TE.yCoord + 0.5D, TE.zCoord + 0.5D, "random.click", 0.3F, getState(TE) == STATE_ON ? 0.5F : 0.6F);
+            world.playSoundEffect(TE.getPos().getX() + 0.5D, TE.getPos().getY() + 0.5D, TE.getPos().getZ() + 0.5D, "random.click", 0.3F, getState(TE) == STATE_ON ? 0.5F : 0.6F);
         }
 
         TE.setData(temp);

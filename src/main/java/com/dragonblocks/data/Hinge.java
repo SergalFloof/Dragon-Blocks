@@ -3,6 +3,7 @@ package com.dragonblocks.data;
 import com.dragonblocks.tileentity.TEBase;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class Hinge {
@@ -100,10 +101,10 @@ public class Hinge {
     /**
      * Sets state (open or closed).
      */
-    public static void setState(TEBase TE, int state, boolean playSound)
+    public static void setState(TEBase TE, int state, boolean playSound, BlockPos pos)
     {
         int temp = (TE.getData() & ~0x40) | (state << 6);
-        World world = TE.getWorldObj();
+        World world = TE.getWorld();
 
         if (!world.isRemote && playSound) {
             world.playAuxSFXAtEntity((EntityPlayer)null, 1003, TE.xCoord, TE.yCoord, TE.zCoord, 0);

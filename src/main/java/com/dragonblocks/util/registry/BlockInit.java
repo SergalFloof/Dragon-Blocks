@@ -30,6 +30,7 @@ public class BlockInit {
 	public static final List<Block> BLOCKS = new ArrayList<Block>();
 	//Blocks
 	public static final Block MAIN_BLOCK = new BlockBase("main_block", Material.WOOD);
+	public static final Block BLOCK_SLOPE = new BlockBase("block_slope", Material.WOOD);
 
 	
 

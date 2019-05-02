@@ -1,14 +1,16 @@
 package com.dragonblocks.data;
 
-import static net.minecraftforge.common.util.ForgeDirection.DOWN;
-import static net.minecraftforge.common.util.ForgeDirection.EAST;
-import static net.minecraftforge.common.util.ForgeDirection.NORTH;
-import static net.minecraftforge.common.util.ForgeDirection.SOUTH;
-import static net.minecraftforge.common.util.ForgeDirection.UP;
-import static net.minecraftforge.common.util.ForgeDirection.WEST;
+import static net.minecraft.client.renderer.EnumFaceDirection.DOWN;
+import static net.minecraft.client.renderer.EnumFaceDirection.EAST;
+import static net.minecraft.client.renderer.EnumFaceDirection.NORTH;
+import static net.minecraft.client.renderer.EnumFaceDirection.SOUTH;
+import static net.minecraft.client.renderer.EnumFaceDirection.UP;
+import static net.minecraft.client.renderer.EnumFaceDirection.WEST;
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraftforge.common.util.ForgeDirection;
+
+import net.minecraft.client.renderer.EnumFaceDirection;
+import net.minecraft.util.EnumFacing;
 
 public class Stairs {
 
@@ -93,7 +95,7 @@ public class Stairs {
     public final boolean isPositive;
 
     /** Stairs direction. */
-    public final List<ForgeDirection> facings;
+    public final List<EnumFaceDirection> facings;
 
     public static final byte NO_FACE = 0;
     public static final byte FULL = 1;
@@ -121,7 +123,7 @@ public class Stairs {
         isPositive = this.facings.contains(UP);
     }
 
-    public static final Stairs NORMAL_NW = new Stairs(ID_NORMAL_NW, Type.NORMAL_SIDE, new ForgeDirection[] { NORTH, WEST }, new int[] { STAGGERED, STAGGERED, NO_FACE, FULL, NO_FACE, FULL }, new int[] { MAX_MAX, MAX_MAX, 0, 0, 0, 0 });
+    public static final Stairs NORMAL_NW = new Stairs(ID_NORMAL_NW, Type.NORMAL_SIDE, new EnumFacing[] { NORTH, WEST }, new int[] { STAGGERED, STAGGERED, NO_FACE, FULL, NO_FACE, FULL }, new int[] { MAX_MAX, MAX_MAX, 0, 0, 0, 0 });
     public static final Stairs NORMAL_NE = new Stairs(ID_NORMAL_NE, Type.NORMAL_SIDE, new ForgeDirection[] { NORTH, EAST }, new int[] { STAGGERED, STAGGERED, NO_FACE, FULL, FULL, NO_FACE }, new int[] { MIN_MAX, MIN_MAX, 0, 0, 0, 0 });
     public static final Stairs NORMAL_SW = new Stairs(ID_NORMAL_SW, Type.NORMAL_SIDE, new ForgeDirection[] { SOUTH, WEST }, new int[] { STAGGERED, STAGGERED, FULL, NO_FACE, NO_FACE, FULL }, new int[] { MAX_MIN, MAX_MIN, 0, 0, 0, 0 });
     public static final Stairs NORMAL_SE = new Stairs(ID_NORMAL_SE, Type.NORMAL_SIDE, new ForgeDirection[] { SOUTH, EAST }, new int[] { STAGGERED, STAGGERED, FULL, NO_FACE, FULL, NO_FACE }, new int[] { MIN_MIN, MIN_MIN, 0, 0, 0, 0 });
@@ -150,12 +152,12 @@ public class Stairs {
     public static final Stairs NORMAL_EXT_POS_SW = new Stairs(ID_NORMAL_EXT_POS_SW, Type.NORMAL_EXT, new ForgeDirection[] { UP, SOUTH, WEST }, new int[] { FULL, NO_FACE, STAGGERED, NO_FACE, NO_FACE, STAGGERED }, new int[] { 0, 0, MAX_MIN, 0, 0, MIN_MIN });
     public static final Stairs NORMAL_EXT_POS_SE = new Stairs(ID_NORMAL_EXT_POS_SE, Type.NORMAL_EXT, new ForgeDirection[] { UP, SOUTH, EAST }, new int[] { FULL, NO_FACE, STAGGERED, NO_FACE, STAGGERED, NO_FACE }, new int[] { 0, 0, MIN_MIN, 0, MIN_MIN, 0 });
 
-    public boolean isFaceFull(ForgeDirection side)
+    public boolean isFaceFull(EnumFaceDirection side)
     {
         return faceShape[side.ordinal()] == FULL;
     }
 
-    public int staggeredOrientation(ForgeDirection side)
+    public int staggeredOrientation(EnumFaceDirection side)
     {
         return staggeredCorner[side.ordinal()];
     }

@@ -6,6 +6,7 @@ import net.minecraft.item.ItemStack;
 
 import com.dragonblocks.objects.blocks.BlockSlope;
 import com.dragonblocks.util.BlockProperties;
+import com.dragonblocks.util.registry.BlockInit;
 import com.dragonblocks.util.registry.BlockRegistry;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
@@ -30,7 +31,7 @@ public class PacketSlopeSelect implements ICarpentersPacket {
         boolean incDmg = bbis.readBoolean();
         ItemStack itemStack = entityPlayer.inventory.getStackInSlot(slot);
 
-        if (itemStack != null && BlockProperties.toBlock(itemStack).equals(BlockRegistry.blockCarpentersSlope)) {
+        if (itemStack != null && BlockProperties.toBlock(itemStack).equals(BlockInit.BLOCK_SLOPE)) {
 
             int maxDmg = BlockSlope.slopeType.length - 1;
             int itemDmg = itemStack.getItemDamage();

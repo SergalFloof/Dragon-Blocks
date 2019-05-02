@@ -3,6 +3,7 @@ package com.dragonblocks.data;
 import com.dragonblocks.tileentity.TEBase;
 
 import net.minecraft.client.renderer.EnumFaceDirection;
+import net.minecraft.util.EnumFacing;
 
 public interface ISided {
 
@@ -21,6 +22,6 @@ public interface ISided {
      * @param  TE the {@link TEBase}
      * @return the {@link ForgeDirection}
      */
-    public EnumFaceDirection getDirection(TEBase TE);
+    public EnumFacing getDirection(TEBase TE);
 
 }

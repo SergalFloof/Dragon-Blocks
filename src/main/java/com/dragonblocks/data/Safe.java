@@ -111,7 +111,7 @@ public class Safe
             float f = 5.0F;
             boolean isOpen = false;
             @SuppressWarnings("rawtypes")
-			List list = TE.getWorld().getEntitiesWithinAABB(EntityPlayer.class, AxisAlignedBB.getBoundingBox((double)((float)TE.xCoord - f), (double)((float)TE.yCoord - f), (double)((float)TE.zCoord - f), (double)((float)(TE.xCoord + 1) + f), (double)((float)(TE.yCoord + 1) + f), (double)((float)(TE.zCoord + 1) + f)));
+			List list = TE.getWorld().getEntitiesWithinAABB(EntityPlayer.class, AxisAlignedBB.getBoundingBox((double)((float)TE.getPos().getX() - f), (double)((float)TE.getPos().getY() - f), (double)((float)TE.getPos().getZ() - f), (double)((float)(TE.getPos().getX() + 1) + f), (double)((float)(TE.getPos().getY() + 1) + f), (double)((float)(TE.getPos().getZ() + 1) + f)));
             for (EntityPlayer entityPlayer : (List<EntityPlayer>) list) {
                 if (entityPlayer.openContainer instanceof ContainerChest) {
                     IInventory iinventory = ((ContainerChest)entityPlayer.openContainer).getLowerChestInventory();

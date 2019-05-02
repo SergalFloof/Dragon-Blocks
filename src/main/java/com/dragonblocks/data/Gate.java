@@ -82,7 +82,7 @@ public class Gate {
         World world = TE.getWorld();
 
         if (!world.isRemote && playSound) {
-            world.playAuxSFXAtEntity((EntityPlayer)null, 1003, TE.xCoord, TE.yCoord, TE.zCoord, 0);
+            world.playAuxSFXAtEntity((EntityPlayer)null, 1003, TE.getPos().getX(), TE.getPos().getY(), TE.getPos().getZ(), 0);
         }
 
         TE.setData(temp);

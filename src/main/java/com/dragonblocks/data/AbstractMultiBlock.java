@@ -56,7 +56,7 @@ public abstract class AbstractMultiBlock {
 
         // Locate additional blocks
         for (EnumFacing dir : dirs) {
-            TEBase TE_adj = BlockProperties.getTileEntity(block, TE.getWorld(), TE.x - dir.offsetX, TE.y - dir.offsetY, TE.z - dir.offsetZ);
+            TEBase TE_adj = BlockProperties.getTileEntity(block, TE.getWorld(), TE.getPos().getX() - dir.getFrontOffsetX(), TE.getPos().getY() - dir.getFrontOffsetY(), TE.getPos().getZ() - dir.getFrontOffsetZ());
             if (TE_adj != null && (TE_adj.getData() & matchData) == matchData) {
                 addAndLocateBlocks(TE_adj, block, matchData, dirs, set);
             }

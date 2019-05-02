@@ -3,6 +3,7 @@ package com.dragonblocks.data;
 import com.dragonblocks.tileentity.TEBase;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class Hatch {
@@ -79,13 +80,13 @@ public class Hatch {
     /**
      * Sets state (open or closed).
      */
-    public static void setState(TEBase TE, int state)
+    public static void setState(TEBase TE, int state, BlockPos pos)
     {
         int temp = (TE.getData() & ~0x10) | (state << 4);
         World world = TE.getWorld();
 
         if (!world.isRemote) {
-            world.playAuxSFXAtEntity((EntityPlayer)null, 1003, TE.xCoord, TE.yCoord, TE.zCoord, 0);
+            world.playAuxSFXAtEntity((EntityPlayer)null, 1003, pos, 0);
         }
 
         TE.setData(temp);

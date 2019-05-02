@@ -2,28 +2,29 @@ package com.dragonblocks.entity.item;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import net.minecraft.client.renderer.EnumFaceDirection;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.IIcon;
-import net.minecraft.util.MathHelper;
-import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+
 import com.dragonblocks.api.IHammer;
 import com.dragonblocks.util.BlockProperties;
 import com.dragonblocks.util.handler.DesignHandler;
 import com.dragonblocks.util.handler.DyeHandler;
 import com.dragonblocks.util.protection.PlayerPermissions;
-import com.dragonblocks.util.registry.IconRegistry;
-import com.dragonblocks.util.registry.ItemRegistry;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import com.dragonblocks.util.registry.ItemInit;
 
 public class EntityCarpentersTile extends EntityBase {
 
@@ -58,7 +59,7 @@ public class EntityCarpentersTile extends EntityBase {
         super(world);
     }
 
-    public EntityCarpentersTile(EntityPlayer entityPlayer, World world, int x, int y, int z, ForgeDirection dir, ForgeDirection offset_side, boolean ignoreNeighbors)
+    public EntityCarpentersTile(EntityPlayer entityPlayer, World world, int x, int y, int z, EnumFacing dir, EnumFaceDirection offset_side, boolean ignoreNeighbors)
     {
         super(world, entityPlayer);
         posX = x;
@@ -210,7 +211,7 @@ public class EntityCarpentersTile extends EntityBase {
 
     public void playDyeSound()
     {
-        BlockProperties.playBlockSound(worldObj, new ItemStack(Blocks.sand), (int) Math.floor(posX), (int) Math.floor(posY), (int) Math.floor(posZ), true);
+        BlockProperties.playBlockSound(world, new ItemStack(Blocks.SAND), (int) Math.floor(posX), (int) Math.floor(posY), (int) Math.floor(posZ), true);
     }
 
     public double[] getBounds()
@@ -224,12 +225,12 @@ public class EntityCarpentersTile extends EntityBase {
         boundingBox.setBounds(posX + bounds[0], posY + bounds[1], posZ + bounds[2], posX + bounds[3], posY + bounds[4], posZ + bounds[5]);
     }
 
-    public ForgeDirection getDirection()
+    public EnumFacing getDirection()
     {
-        return ForgeDirection.getOrientation(getDataWatcher().getWatchableObjectInt(ID_DIRECTION));
+        return EnumFacing.getOrientation(getDataWatcher().getWatchableObjectInt(ID_DIRECTION));
     }
 
-    public void setDirection(ForgeDirection dir)
+    public void setDirection(EnumFacing dir)
     {
         getDataWatcher().updateObject(ID_DIRECTION, new Integer(dir.ordinal()));
     }
@@ -275,15 +276,6 @@ public class EntityCarpentersTile extends EntityBase {
         return getDataWatcher().getWatchableObjectString(ID_DESIGN);
     }
 
-    public IIcon getIcon()
-    {
-        if (hasDesign()) {
-            return IconRegistry.icon_design_tile.get(DesignHandler.listTile.indexOf(getDesign()));
-        } else {
-            return IconRegistry.icon_tile_blank;
-        }
-    }
-
     /**
      * (abstract) Protected helper method to read subclass entity data from NBT.
      */
@@ -318,7 +310,7 @@ public class EntityCarpentersTile extends EntityBase {
         if (entity instanceof EntityPlayer) {
 
             EntityPlayer entityPlayer = (EntityPlayer) entity;
-            ItemStack itemStack = entityPlayer.getHeldItem();
+            ItemStack itemStack = entityPlayer.getHeldItemMainhand();
 
             boolean hasHammer = false;
 
@@ -350,7 +342,7 @@ public class EntityCarpentersTile extends EntityBase {
             boundsSet = true;
         }
 
-        if (!worldObj.isRemote) {
+        if (!world.isRemote) {
 
             if (ticks++ >= 20) {
 
@@ -371,7 +363,7 @@ public class EntityCarpentersTile extends EntityBase {
      */
     private ItemStack getItemDrop()
     {
-        return new ItemStack(ItemRegistry.itemCarpentersTile);
+        return new ItemStack(ItemInit.itemTile);
     }
 
     /**
@@ -381,7 +373,7 @@ public class EntityCarpentersTile extends EntityBase {
      * @return A ItemStack to add to the player's inventory, Null if nothing should be added.
      */
     @Override
-    public ItemStack getPickedResult(MovingObjectPosition target)
+    public ItemStack getPickedResult(RayTraceResult target)
     {
         return getItemDrop();
     }
@@ -398,13 +390,13 @@ public class EntityCarpentersTile extends EntityBase {
      */
     public boolean onValidSurface()
     {
-        ForgeDirection dir = getDirection();
+        EnumFacing dir = getDirection();
 
-        int x_offset = MathHelper.floor_double(posX) - dir.offsetX;
-        int y_offset = MathHelper.floor_double(posY) - dir.offsetY;
-        int z_offset = MathHelper.floor_double(posZ) - dir.offsetZ;
+        int x_offset = MathHelper.floor(posX) - dir.getFrontOffsetX();
+        int y_offset = MathHelper.floor(posY) - dir.getFrontOffsetY();
+        int z_offset = MathHelper.floor(posZ) - dir.getFrontOffsetZ();
 
-        return worldObj.getBlock(x_offset, y_offset, z_offset).isSideSolid(worldObj, x_offset, y_offset, z_offset, dir);
+        return world.getBlock(x_offset, y_offset, z_offset).isSideSolid(world, x_offset, y_offset, z_offset, dir);
     }
 
     /**
@@ -413,16 +405,16 @@ public class EntityCarpentersTile extends EntityBase {
     @Override
     public boolean attackEntityFrom(DamageSource damageSource, float par2)
     {
-        if (!worldObj.isRemote) {
+        if (!world.isRemote) {
 
-            Entity entity = damageSource.getEntity();
+            Entity entity = damageSource.getTrueSource();
 
             boolean dropItem = false;
 
             if (entity instanceof EntityPlayer && PlayerPermissions.hasElevatedPermission(this, (EntityPlayer)entity, false)) {
 
                 EntityPlayer entityPlayer = (EntityPlayer) entity;
-                ItemStack itemStack = entityPlayer.getHeldItem();
+                ItemStack itemStack = entityPlayer.getHeldItemMainhand();
 
                 if (itemStack != null) {
 
@@ -450,7 +442,7 @@ public class EntityCarpentersTile extends EntityBase {
             {
                 setDead();
                 setBeenAttacked();
-                onBroken(damageSource.getEntity());
+                onBroken(damageSource.getTrueSource());
                 return true;
             }
 
@@ -465,13 +457,13 @@ public class EntityCarpentersTile extends EntityBase {
      */
     public boolean interactFirst(EntityPlayer entityPlayer)
     {
-        if (worldObj.isRemote) {
+        if (world.isRemote) {
 
             return true;
 
         } else if (PlayerPermissions.hasElevatedPermission(this, entityPlayer, false)) {
 
-            ItemStack itemStack = entityPlayer.getHeldItem();
+            ItemStack itemStack = entityPlayer.getHeldItemMainhand();
 
             if (itemStack != null) {
 
@@ -514,7 +506,7 @@ public class EntityCarpentersTile extends EntityBase {
     @Override
     public void moveEntity(double x, double y, double z)
     {
-        if (!worldObj.isRemote && !isDead && x * x + y * y + z * z > 0.0D)
+        if (!world.isRemote && !isDead && x * x + y * y + z * z > 0.0D)
         {
             setDead();
             onBroken((Entity)null);
@@ -527,7 +519,7 @@ public class EntityCarpentersTile extends EntityBase {
     @Override
     public void addVelocity(double x, double y, double z)
     {
-        if (!worldObj.isRemote && !isDead && x * x + y * y + z * z > 0.0D)
+        if (!world.isRemote && !isDead && x * x + y * y + z * z > 0.0D)
         {
             setDead();
             onBroken((Entity)null);
@@ -556,11 +548,16 @@ public class EntityCarpentersTile extends EntityBase {
     /**
      * returns the bounding box for this entity
      */
-    @Override
-    public AxisAlignedBB getBoundingBox()
-    {
-        return boundingBox;
-    }
+    
+//    @Override
+//    public AxisAlignedBB getCollisionBoundingBox() {
+//    	return boundingBox;
+//    }
+//    @Override
+//    public AxisAlignedBB getBoundingBox()
+//    {
+//        return boundingBox;
+//    }
 
     @Override
     public float getCollisionBorderSize()

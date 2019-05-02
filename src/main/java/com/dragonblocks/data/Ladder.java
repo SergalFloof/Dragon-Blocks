@@ -2,7 +2,8 @@ package com.dragonblocks.data;
 
 import com.dragonblocks.tileentity.TEBase;
 
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.client.renderer.EnumFaceDirection;
+import net.minecraft.util.EnumFacing;
 
 public class Ladder implements ISided {
 
@@ -21,13 +22,12 @@ public class Ladder implements ISided {
     public static final byte TYPE_POLE    = 2;
 
     @Override
-    public ForgeDirection getDirection(TEBase TE)
-    {
-        return ForgeDirection.getOrientation(TE.getData() & 0x7);
-    }
+   	public EnumFacing getDirection(TEBase TE) {
+   		return EnumFacing.getFront(TE.getData() & 0x7);
+   	}
 
     @Override
-    public boolean setDirection(TEBase TE, ForgeDirection dir)
+    public boolean setDirection(TEBase TE, EnumFaceDirection dir)
     {
         int temp = (TE.getData() & ~0x7) | dir.ordinal();
         return TE.setData(temp);

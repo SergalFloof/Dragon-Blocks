@@ -1,10 +1,12 @@
 package com.dragonblocks.data;
 
 import com.dragonblocks.tileentity.TEBase;
+import com.dragonblocks.util.BlockProperties;
 
 import net.minecraft.block.material.Material;
+import net.minecraft.client.renderer.EnumFaceDirection;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
 
 public class PressurePlate implements ISided {
 
@@ -30,20 +32,18 @@ public class PressurePlate implements ISided {
      * Returns direction.
      */
     @Override
-    public ForgeDirection getDirection(TEBase TE)
-    {
-        return ForgeDirection.getOrientation(TE.getData() & 0x7);
-    }
+	public EnumFacing getDirection(TEBase TE) {
+		return EnumFacing.getFront(TE.getData() & 0x7);
+	}
 
     /**
      * Sets direction.
      */
     @Override
-    public boolean setDirection(TEBase TE, ForgeDirection dir)
-    {
-        int temp = (TE.getData() & ~0x7) | dir.ordinal();
+	public boolean setDirection(TEBase TE, EnumFaceDirection dir) {
+		int temp = (TE.getData() & ~0x7) | dir.ordinal();
         return TE.setData(temp);
-    }
+	}
 
     /**
      * Returns state.
@@ -59,9 +59,9 @@ public class PressurePlate implements ISided {
     public void setState(TEBase TE, int state, boolean playSound)
     {
         int temp = (TE.getData() & ~0x8) | (state << 3);
-        World world = TE.getWorldObj();
+        World world = TE.getWorld();
 
-        if (!world.isRemote && BlockProperties.toBlock(BlockProperties.getCover(TE, 6)).getMaterial() != Material.cloth && playSound && getState(TE) != state) {
+        if (!world.isRemote && BlockProperties.toBlock(BlockProperties.getCover(TE, 6)).getMaterial() != Material.CLOTH && playSound && getState(TE) != state) {
             world.playSoundEffect(TE.xCoord + 0.5D, TE.yCoord + 0.1D, TE.zCoord + 0.5D, "random.click", 0.3F, getState(TE) == STATE_ON ? 0.5F : 0.6F);
         }
 
@@ -101,5 +101,9 @@ public class PressurePlate implements ISided {
         int temp = (TE.getData() & ~0x60) | (trigger << 5);
         TE.setData(temp);
     }
+
+	
+
+	
 
 }

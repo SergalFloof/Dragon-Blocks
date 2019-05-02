@@ -2,6 +2,8 @@ package com.dragonblocks.data;
 
 import com.dragonblocks.tileentity.TEBase;
 
+import net.minecraft.client.renderer.EnumFaceDirection;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
 
 public class Torch implements ISided {
@@ -27,18 +29,17 @@ public class Torch implements ISided {
      * Returns direction.
      */
     @Override
-    public ForgeDirection getDirection(TEBase TE)
+    public EnumFacing getDirection(TEBase TE)
     {
-        return ForgeDirection.getOrientation(TE.getData() & 0x7);
+        return EnumFacing.getFront(TE.getData() & 0x7);
     }
 
     /**
      * Sets direction.
      */
     @Override
-    public boolean setDirection(TEBase TE, ForgeDirection dir)
-    {
-        int temp = (TE.getData() & ~0x7) | dir.ordinal();
+    public boolean setDirection(TEBase TE, EnumFaceDirection dir) {
+    	int temp = (TE.getData() & ~0x7) | dir.ordinal();
         return TE.setData(temp);
     }
 
@@ -75,8 +76,8 @@ public class Torch implements ISided {
     {
         if (state.ordinal() > getState(TE).ordinal()) {
             double[] headCoords = getHeadCoordinates(TE);
-            World world = TE.getWorldObj();
-            world.playSoundEffect(headCoords[0], headCoords[1], headCoords[2], "random.fizz", 0.5F, 2.6F + (world.rand.nextFloat() - world.rand.nextFloat()) * 0.8F);
+            World world = TE.getWorld();
+//            world.playSoundEffect(headCoords[0], headCoords[1], headCoords[2], "random.fizz", 0.5F, 2.6F + (world.rand.nextFloat() - world.rand.nextFloat()) * 0.8F);
         }
 
         int temp = (TE.getData() & ~0x18) | (state.ordinal() << 3);
@@ -89,14 +90,14 @@ public class Torch implements ISided {
     public double[] getHeadCoordinates(TEBase TE)
     {
         double[] coords;
-        double xOffset = TE.xCoord + 0.5F;
-        double yOffset = TE.yCoord + 0.7F;
-        double zOffset = TE.zCoord + 0.5F;
+        double xOffset = TE.getPos().getX() + 0.5F;
+        double yOffset = TE.getPos().getY() + 0.7F;
+        double zOffset = TE.getPos().getZ() + 0.5F;
 
         if (getType(TE) == TYPE_VANILLA) {
             double offset1 = 0.2199999988079071D;
             double offset2 = 0.27000001072883606D;
-            ForgeDirection side = getDirection(TE);
+            EnumFacing side = getDirection(TE);
             switch (side) {
                 case NORTH:
                     coords = new double[] { xOffset, yOffset + offset1, zOffset + offset2 };
@@ -115,7 +116,7 @@ public class Torch implements ISided {
                     break;
             }
         } else {
-            coords = new double[] { xOffset, TE.yCoord + 0.5625F, zOffset };
+            coords = new double[] { xOffset, TE.getPos().getY() + 0.5625F, zOffset };
         }
 
         return coords;

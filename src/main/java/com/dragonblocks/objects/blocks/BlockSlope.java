@@ -2,34 +2,28 @@ package com.dragonblocks.objects.blocks;
 
 import java.util.List;
 import net.minecraft.block.material.Material;
-import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.IIcon;
-import net.minecraft.util.MathHelper;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.Vec3;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
-import com.dragonblocks.CarpentersBlocks;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+
 import com.dragonblocks.data.Slope;
 import com.dragonblocks.data.Slope.Type;
 import com.dragonblocks.tileentity.TEBase;
 import com.dragonblocks.util.EntityLivingUtil;
 import com.dragonblocks.util.handler.EventHandler;
 import com.dragonblocks.util.registry.BlockRegistry;
-import com.dragonblocks.util.registry.IconRegistry;
-import com.dragonblocks.util.registry.ItemRegistry;
 import com.dragonblocks.util.slope.SlopeTransform;
 import com.dragonblocks.util.slope.SlopeUtil;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 public class BlockSlope extends BlockCoverable {
 
@@ -46,29 +40,6 @@ public class BlockSlope extends BlockCoverable {
     public BlockSlope(Material material)
     {
         super(material);
-    }
-
-    @SideOnly(Side.CLIENT)
-    @Override
-    /**
-     * When this method is called, your block should register all the icons it needs with the given IconRegister. This
-     * is the only chance you get to register icons.
-     */
-    public void registerBlockIcons(IIconRegister iconRegister)
-    {
-        IconRegistry.icon_uncovered_oblique_pos = iconRegister.registerIcon(CarpentersBlocks.MODID + ":" + "slope/oblique_pos");
-        IconRegistry.icon_uncovered_oblique_neg = iconRegister.registerIcon(CarpentersBlocks.MODID + ":" + "slope/oblique_neg");
-    }
-
-    @Override
-    @SideOnly(Side.CLIENT)
-    /**
-     * Returns a base icon that doesn't rely on blockIcon, which
-     * is set prior to texture stitch events.
-     */
-    public IIcon getIcon()
-    {
-        return IconRegistry.icon_uncovered_full;
     }
 
     @Override
