@@ -77,21 +77,21 @@ public class BlockBarrier extends BlockCoverable {
         return true;
     }
 
-    @Override
     /**
      * Called when the block is placed in the world.
      */
-    public void onBlockPlacedBy(World world, int x, int y, int z, EntityLivingBase entityLiving, ItemStack itemStack)
-    {
-        super.onBlockPlacedBy(world, x, y, z, entityLiving, itemStack);
+    @Override
+    public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase entityLiving,
+    		ItemStack stack) {
+    	super.onBlockPlacedBy(world, pos, state, entityLiving, stack);
 
-        TEBase TE = getTileEntity(world, x, y, z);
+        TEBase TE = getTileEntity(world, pos);
 
         if (TE != null) {
 
             /* Match block type with adjacent type if possible. */
 
-            TEBase[] TE_list = getAdjacentTileEntities(world, x, y, z);
+            TEBase[] TE_list = getAdjacentTileEntities(world, pos);
 
             for (TEBase TE_current : TE_list) {
 
@@ -111,7 +111,8 @@ public class BlockBarrier extends BlockCoverable {
 
         }
     }
-
+    
+   
     /**
      * Adds all intersecting collision boxes to a list. (Be sure to only add boxes to the list if they intersect the
      * mask.) Parameters: World, X, Y, Z, mask, list, colliding entity
@@ -279,11 +280,12 @@ public class BlockBarrier extends BlockCoverable {
      * @param side The side to check
      * @return True if the block is solid on the specified side.
      */
+    
     @Override
-    public boolean isSideSolid(IBlockAccess blockAccess, int x, int y, int z, EnumFacing side)
-    {
-        return side.equals(EnumFacing.UP);
+    public boolean isSideSolid(IBlockState base_state, IBlockAccess world, BlockPos pos, EnumFacing side) {
+    	return side.equals(EnumFacing.UP);
     }
+    
 
     @Override
     /**
@@ -299,9 +301,9 @@ public class BlockBarrier extends BlockCoverable {
      * Returns true if the given side of this block type should be rendered, if the adjacent block is at the given
      * coordinates.  Args: world, x, y, z, side
      */
-    public boolean shouldSideBeRendered(IBlockAccess blockAccess, int x, int y, int z, int side)
-    {
-        return true;
+    public boolean shouldSideBeRendered(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos,
+    		EnumFacing side) {
+    	return true;
     }
 
     @Override

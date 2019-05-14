@@ -1427,7 +1427,7 @@ public class BlockCoverable extends BlockContainer {
     /**
      * Called before cover or decoration checks are performed.
      */
-    protected void preOnBlockActivated(TEBase TE, EntityPlayer entityPlayer, int side, float hitX, float hitY, float hitZ, ActionResult actionResult) {}
+    protected void preOnBlockActivated(TEBase TE, EntityPlayer entityPlayer, EnumFacing side, float hitX, float hitY, float hitZ, ActionResult actionResult) {}
 
     /**
      * Called if cover and decoration checks have been performed but

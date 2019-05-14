@@ -5,6 +5,7 @@ import java.util.List;
 
 import net.minecraft.client.renderer.EnumFaceDirection;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.MoverType;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
@@ -183,10 +184,11 @@ public class EntityCarpentersTile extends EntityBase {
      * Sets the position and rotation. Only difference from the other one is no bounding on the rotation. Args: posX,
      * posY, posZ, yaw, pitch
      */
+    
     @Override
     @SideOnly(Side.CLIENT)
-    public void setPositionAndRotation2(double posX, double posY, double posZ, float yaw, float pitch, int par9) { }
-
+    public void setPositionAndRotation(double x, double y, double z, float yaw, float pitch) {}
+    
     /**
      * Called when a player mounts an entity. e.g. mounts a pig, mounts a boat.
      */
@@ -194,7 +196,7 @@ public class EntityCarpentersTile extends EntityBase {
     public void mountEntity(Entity entity) { }
 
     @Override
-    protected boolean func_145771_j(double x, double y, double z)
+    protected boolean pushOutOfBlocks(double x, double y, double z)
     {
         return false;
     }
@@ -206,7 +208,7 @@ public class EntityCarpentersTile extends EntityBase {
 
     public void playTileSound()
     {
-        BlockProperties.playBlockSound(worldObj, new ItemStack(Blocks.hardened_clay), (int) Math.floor(posX), (int) Math.floor(posY), (int) Math.floor(posZ), true);
+        BlockProperties.playBlockSound(world, new ItemStack(Blocks.HARDENED_CLAY), (int) Math.floor(posX), (int) Math.floor(posY), (int) Math.floor(posZ), true);
     }
 
     public void playDyeSound()
@@ -503,10 +505,10 @@ public class EntityCarpentersTile extends EntityBase {
     /**
      * Tries to moves the entity by the passed in displacement. Args: x, y, z
      */
+    
     @Override
-    public void moveEntity(double x, double y, double z)
-    {
-        if (!world.isRemote && !isDead && x * x + y * y + z * z > 0.0D)
+    public void move(MoverType type, double x, double y, double z) {
+    	if (!world.isRemote && !isDead && x * x + y * y + z * z > 0.0D)
         {
             setDead();
             onBroken((Entity)null);

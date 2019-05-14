@@ -50,7 +50,7 @@ public class EntityLivingUtil {
      */
     public static EnumFacing getRotationFacing(int rot)
     {
-        return EnumFacing.getOrientation(Direction.directionToFacing[rot]);
+        return EnumFacing.getHorizontal(rot);
     }
 
     /**

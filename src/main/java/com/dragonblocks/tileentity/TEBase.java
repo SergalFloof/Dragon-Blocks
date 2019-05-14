@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDirectional;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -16,6 +17,7 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
@@ -107,7 +109,7 @@ public class TEBase extends TileEntity implements IProtected {
     }
 
     @Override
-    public void writeToNBT(NBTTagCompound nbt)
+    public NBTTagCompound writeToNBT(NBTTagCompound nbt)
     {
         super.writeToNBT(nbt);
 
@@ -129,6 +131,7 @@ public class TEBase extends TileEntity implements IProtected {
         nbt.setInteger(TAG_METADATA, cbMetadata);
         nbt.setString(TAG_DESIGN, cbDesign);
         nbt.setString(TAG_OWNER, cbOwner);
+		return nbt;
     }
     
     /**
@@ -172,7 +175,7 @@ public class TEBase extends TileEntity implements IProtected {
      */
     public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt)
     {
-        readFromNBT(pkt.func_148857_g());
+        readFromNBT(pkt.getNbtCompound());
     }
 
     /**
@@ -189,10 +192,10 @@ public class TEBase extends TileEntity implements IProtected {
      * @param z Z Position
      * @return True to remove the old tile entity, false to keep it in tact {and create a new one if the new values specify to}
      */
+    
     @Override
-    public boolean shouldRefresh(Block oldBlock, Block newBlock, int oldMeta, int newMeta, World world, int x, int y, int z)
-    {
-        /*
+    public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newState) {
+    	/*
          * This is a curious method.
          *
          * Essentially, when doing most block logic server-side, changes
@@ -203,8 +206,9 @@ public class TEBase extends TileEntity implements IProtected {
          * Making the tile entity refresh only when the block is first created
          * is not only reasonable, but fixes this behavior.
          */
-        return oldBlock != newBlock;
+        return oldState != newState;
     }
+    
 
     /**
      * Copies owner from TEBase object.

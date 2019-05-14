@@ -7,40 +7,27 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.IIcon;
-import net.minecraft.util.MathHelper;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.Vec3;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+
 import com.dragonblocks.data.Stairs;
 import com.dragonblocks.tileentity.TEBase;
 import com.dragonblocks.util.registry.BlockRegistry;
-import com.dragonblocks.util.registry.IconRegistry;
-import com.dragonblocks.util.registry.ItemRegistry;
 import com.dragonblocks.util.stairs.StairsTransform;
 import com.dragonblocks.util.stairs.StairsUtil;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 public class BlockStairs extends BlockCoverable {
 
     public BlockStairs(Material material)
     {
         super(material);
-    }
-
-    @Override
-    @SideOnly(Side.CLIENT)
-    /**
-     * Returns a base icon that doesn't rely on blockIcon, which
-     * is set prior to texture stitch events.
-     */
-    public IIcon getIcon()
-    {
-        return IconRegistry.icon_uncovered_quartered;
     }
 
     @Override
@@ -161,10 +148,10 @@ public class BlockStairs extends BlockCoverable {
      * Ray traces through the blocks collision from start vector to end vector returning a ray trace hit. Args: world,
      * x, y, z, startVec, endVec
      */
-    public MovingObjectPosition collisionRayTrace(World world, int x, int y, int z, Vec3 startVec, Vec3 endVec)
+    public RayTraceResult collisionRayTrace(World world, int x, int y, int z, Vec3d startVec, Vec3d endVec)
     {
         TEBase TE = getTileEntity(world, x, y, z);
-        MovingObjectPosition finalTrace = null;
+        RayTraceResult finalTrace = null;
 
         if (TE != null) {
 
@@ -182,7 +169,7 @@ public class BlockStairs extends BlockCoverable {
                 if (bounds != null)
                 {
                     setBlockBounds(bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]);
-                    MovingObjectPosition traceResult = super.collisionRayTrace(world, x, y, z, startVec, endVec);
+                    RayTraceResult traceResult = super.collisionRayTrace(world, x, y, z, startVec, endVec);
 
                     if (traceResult != null)
                     {
@@ -238,7 +225,7 @@ public class BlockStairs extends BlockCoverable {
     /**
      * Checks if the block is a solid face on the given side, used by placement logic.
      */
-    public boolean isSideSolid(IBlockAccess blockAccess, int x, int y, int z, ForgeDirection side)
+    public boolean isSideSolid(IBlockAccess blockAccess, int x, int y, int z, EnumFacing side)
     {
         TEBase TE = getTileEntity(blockAccess, x, y, z);
 
@@ -308,7 +295,7 @@ public class BlockStairs extends BlockCoverable {
 
         if (TE != null) {
 
-            int facing = MathHelper.floor_double(entityLiving.rotationYaw * 4.0F / 360.0F + 0.5D) & 3;
+            int facing = MathHelper.floor(entityLiving.rotationYaw * 4.0F / 360.0F + 0.5D) & 3;
 
             TE.setData(world.getBlockMetadata(x, y, z));
             int stairsID = TE.getData();
@@ -362,14 +349,14 @@ public class BlockStairs extends BlockCoverable {
     }
 
     @Override
-    public ForgeDirection[] getValidRotations(World worldObj, int x, int y,int z)
+    public EnumFacing[] getValidRotations(World worldObj, int x, int y,int z)
     {
-        ForgeDirection[] axises = {ForgeDirection.UP, ForgeDirection.DOWN};
+    	EnumFacing[] axises = {EnumFacing.UP, EnumFacing.DOWN};
         return axises;
     }
 
     @Override
-    public boolean rotateBlock(World world, int x, int y, int z, ForgeDirection axis)
+    public boolean rotateBlock(World world, int x, int y, int z, EnumFacing axis)
     {
         // to correctly support archimedes' ships mod:
         // if Axis is DOWN, block rotates to the left, north -> west -> south -> east
